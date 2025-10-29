@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskQuest Pro - Gerenciador Gamificado Colaborativo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #9333ea 0%, #f3e8ff 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .user-info {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .points-badge {
+      background: #fbbf24;
+      color: #333;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    button {
+      background: #fbbf24;
+      color: #333;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #f59e0b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    }
+
+    /* Auth Forms */
+    .auth-container {
+      max-width: 400px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(147, 51, 234, 0.2);
+    }
+
+    .auth-form h2 {
+      color: #9333ea;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #9333ea;
+      box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+    }
+
+    .auth-form button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .toggle-auth {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .toggle-auth a {
+      color: #9333ea;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Main Dashboard */
+    .dashboard {
+      display: none;
+    }
+
+    .dashboard.active {
+      display: block;
+    }
+
+    .task-creation {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid #9333ea;
+    }
+
+    .task-creation h2 {
+      color: #9333ea;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .stages-container {
+      background: #f9fafb;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .stage-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .stage-input-group input {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .stage-input-group button {
+      padding: 8px 12px;
+      background: #ef4444;
+      color: white;
+      font-size: 14px;
+    }
+
+    .stage-input-group button:hover {
+      background: #dc2626;
+    }
+
+    .add-stage-btn {
+      background: #10b981;
+      color: white;
+      width: 100%;
+    }
+
+    .add-stage-btn:hover {
+      background: #059669;
+    }
+
+    /* Tasks List */
+    .tasks-section {
+      margin-top: 30px;
+    }
+
+    .tasks-section h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .task-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      border-left: 4px solid #9333ea;
+      transition: all 0.3s ease;
+    }
+
+    .task-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(147, 51, 234, 0.2);
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .task-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #9333ea;
+    }
+
+    .task-meta {
+      font-size: 12px;
+      color: #999;
+      display: flex;
+      gap: 15px;
+    }
+
+    /* Horizontal Stages */
+    .stages-progress {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 15px 0;
+      align-items: center;
+      margin-top: 15px;
+    }
+
+    .stage-button {
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+      position: relative;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .stage-button:hover {
+      border-color: #9333ea;
+      background: #f3e8ff;
+      transform: scale(1.05);
+    }
+
+    .stage-button.active {
+      background: #9333ea;
+      color: white;
+      border-color: #9333ea;
+      box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+    }
+
+    .stage-button.completed {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+
+    .stage-button.completed::after {
+      content: ' ✓';
+      font-weight: bold;
+    }
+
+    .stage-collapse-btn {
+      padding: 8px 12px;
+      background: #f3e8ff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: #9333ea;
+      transition: all 0.3s ease;
+    }
+
+    .stage-collapse-btn:hover {
+      background: #9333ea;
+      color: white;
+    }
+
+    .stage-collapse-btn.collapsed {
+      background: #9333ea;
+      color: white;
+    }
+
+    /* User Progress */
+    .user-progress {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .progress-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .progress-item:last-child {
+      border-bottom: none;
+    }
+
+    .progress-user {
+      font-weight: 600;
+      color: #9333ea;
+    }
+
+    .progress-stage {
+      color: #666;
+    }
+
+    /* Invite Section */
+    .invite-section {
+      margin-top: 15px;
+      padding: 15px;
+      background: #fef3c7;
+      border-radius: 8px;
+      border-left: 4px solid #fbbf24;
+    }
+
+    .invite-section h3 {
+      color: #b45309;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .invite-form {
+      display: flex;
+      gap: 10px;
+    }
+
+    .invite-form input {
+      flex: 1;
+      padding: 8px;
+      border: 2px solid #fcd34d;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .invite-form button {
+      padding: 8px 16px;
+      background: #f59e0b;
+      color: white;
+      font-size: 13px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .empty-state h3 {
+      color: #9333ea;
+      margin-bottom: 10px;
+    }
+
+    .empty-state p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    /* Error Messages */
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #dc2626;
+    }
+
+    .success {
+      background: #dcfce7;
+      color: #166534;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #16a34a;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      .header-right {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .stages-progress {
+        gap: 8px;
+      }
+
+      .stage-button {
+        min-width: 100px;
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // API Configuration
+    const API_BASE = 'http://localhost:5000/api';
+    let currentUser = null;
+    let token = null;
+
+    // Initialize app
+    function init() {
+      const savedToken = localStorage.getItem('token');
+      if (savedToken) {
+        token = savedToken;
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          currentUser = JSON.parse(userStr);
+          showDashboard();
+        }
+      } else {
+        showAuthForm();
+      }
+    }
+
+    // Show Auth Form
+    function showAuthForm() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="auth-container">
+          <div class="auth-form" id="loginForm">
+            <h2>🎮 Bem-vindo ao TaskQuest Pro</h2>
+            <div id="authMessage"></div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="loginEmail" placeholder="seu@email.com">
+            </div>
+            <div class="form-group">
+              <label>Senha</label>
+              <input type="password" id="loginPassword" placeholder="Sua senha">
+            </div>
+            <button onclick="handleLogin()">Entrar</button>
+            <div class="toggle-auth">
+              Não tem conta? <a onclick="toggleToRegister()">Criar conta</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleToRegister() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="auth-container">
+          <div class="auth-form" id="registerForm">
+            <h2>🚀 Criar Conta</h2>
+            <div id="authMessage"></div>
+            <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="registerName" placeholder="Seu nome">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="registerEmail" placeholder="seu@email.com">
+            </div>
+            <div class="form-group">
+              <label>Senha</label>
+              <input type="password" id="registerPassword" placeholder="Sua senha">
+            </div>
+            <button onclick="handleRegister()">Criar Conta</button>
+            <div class="toggle-auth">
+              Já tem conta? <a onclick="showAuthForm()">Fazer login</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        showAuthMessage('Por favor, preencha todos os campos', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showAuthMessage(data.error || 'Erro ao fazer login', 'error');
+          return;
+        }
+
+        token = data.token;
+        currentUser = data.user;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        showDashboard();
+      } catch (error) {
+        showAuthMessage('Erro ao conectar com o servidor', 'error');
+      }
+    }
+
+    async function handleRegister() {
+      const name = document.getElementById('registerName').value;
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+
+      if (!name || !email || !password) {
+        showAuthMessage('Por favor, preencha todos os campos', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showAuthMessage(data.error || 'Erro ao criar conta', 'error');
+          return;
+        }
+
+        token = data.token;
+        currentUser = data.user;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        showDashboard();
+      } catch (error) {
+        showAuthMessage('Erro ao conectar com o servidor', 'error');
+      }
+    }
+
+    function showAuthMessage(message, type) {
+      const messageDiv = document.getElementById('authMessage');
+      messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+    }
+
+    // Show Dashboard
+    async function showDashboard() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="container">
+          <header>
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <img src="/logo.png" alt="TaskQuest" style="height: 50px;">
+              <h1>TaskQuest Pro</h1>
+            </div>
+            <div class="header-right">
+              <div class="user-info">👤 ${currentUser.name}</div>
+              <div class="points-badge">⭐ ${currentUser.points} pontos</div>
+              <button onclick="handleLogout()">Sair</button>
+            </div>
+          </header>
+
+          <div class="dashboard active">
+            <div class="task-creation">
+              <h2>➕ Nova Tarefa</h2>
+              <div id="createMessage"></div>
+              <div class="form-group">
+                <label>Nome da Tarefa</label>
+                <input type="text" id="taskTitle" placeholder="Ex: Estudar inglês hoje">
+              </div>
+              <div class="form-group">
+                <label>Descrição (opcional)</label>
+                <input type="text" id="taskDescription" placeholder="Descrição da tarefa">
+              </div>
+              <div class="form-group">
+                <label>Etapas do Processo</label>
+                <div class="stages-container" id="stagesContainer">
+                  <div class="stage-input-group">
+                    <input type="text" class="stage-input" placeholder="Etapa 1">
+                    <button onclick="removeStageInput(this)">✕</button>
+                  </div>
+                </div>
+                <button class="add-stage-btn" onclick="addStageInput()">+ Adicionar Etapa</button>
+              </div>
+              <button onclick="createTask()" style="width: 100%; padding: 12px; margin-top: 15px;">🚀 Criar Tarefa</button>
+            </div>
+
+            <div class="tasks-section">
+              <h2>📋 Minhas Tarefas</h2>
+              <div id="tasksList"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      loadTasks();
+    }
+
+    function addStageInput() {
+      const container = document.getElementById('stagesContainer');
+      const div = document.createElement('div');
+      div.className = 'stage-input-group';
+      div.innerHTML = `
+        <input type="text" class="stage-input" placeholder="Nova etapa">
+        <button onclick="removeStageInput(this)">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeStageInput(btn) {
+      btn.parentElement.remove();
+    }
+
+    async function createTask() {
+      const title = document.getElementById('taskTitle').value;
+      const description = document.getElementById('taskDescription').value;
+      const stageInputs = document.querySelectorAll('.stage-input');
+      const stages = Array.from(stageInputs).map(input => input.value).filter(s => s.trim());
+
+      if (!title || stages.length === 0) {
+        showCreateMessage('Por favor, preencha o título e adicione pelo menos uma etapa', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/tasks`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ title, description, stages }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showCreateMessage(data.error || 'Erro ao criar tarefa', 'error');
+          return;
+        }
+
+        showCreateMessage('Tarefa criada com sucesso! 🎉', 'success');
+        document.getElementById('taskTitle').value = '';
+        document.getElementById('taskDescription').value = '';
+        document.getElementById('stagesContainer').innerHTML = `
+          <div class="stage-input-group">
+            <input type="text" class="stage-input" placeholder="Etapa 1">
+            <button onclick="removeStageInput(this)">✕</button>
+          </div>
+        `;
+        loadTasks();
+      } catch (error) {
+        showCreateMessage('Erro ao conectar com o servidor', 'error');
+      }
+    }
+
+    function showCreateMessage(message, type) {
+      const messageDiv = document.getElementById('createMessage');
+      messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+      setTimeout(() => {
+        messageDiv.innerHTML = '';
+      }, 4000);
+    }
+
+    async function loadTasks() {
+      try {
+        const response = await fetch(`${API_BASE}/tasks`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        const tasks = await response.json();
+
+        const tasksList = document.getElementById('tasksList');
+
+        if (tasks.length === 0) {
+          tasksList.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">⚡</div>
+              <h3>Nenhuma tarefa ainda</h3>
+              <p>Crie sua primeira tarefa ao lado para começar! 🚀</p>
+            </div>
+          `;
+          return;
+        }
+
+        tasksList.innerHTML = tasks.map(task => `
+          <div class="task-card">
+            <div class="task-header">
+              <div>
+                <div class="task-title">${task.title}</div>
+                <div class="task-meta">
+                  <span>👥 ${task.collaborators} colaborador(es)</span>
+                  <span>📊 ${task.progress?.length || 0} em progresso</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stages-progress" id="stages-${task.id}">
+              ${task.stages.map((stage, idx) => `
+                <button class="stage-button ${getCurrentUserStage(task.id) === stage.id ? 'active' : ''}" 
+                        onclick="updateProgress(${task.id}, ${stage.id})"
+                        style="background: ${stage.color}; color: white; border-color: ${stage.color};">
+                  ${stage.name}
+                </button>
+              `).join('')}
+              <button class="stage-collapse-btn" onclick="toggleStagesCollapse(this)">Encolher</button>
+            </div>
+
+            <div class="user-progress">
+              <strong>Progresso dos colaboradores:</strong>
+              ${task.progress.map(p => {
+                const user = task.collaborators.find(c => c.userId === p.userId);
+                const stage = task.stages.find(s => s.id === p.currentStageId);
+                return `
+                  <div class="progress-item">
+                    <span class="progress-user">${user ? 'Colaborador' : 'Você'}</span>
+                    <span class="progress-stage">→ ${stage ? stage.name : 'Não iniciado'}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="invite-section">
+              <h3>👥 Convidar Colaborador</h3>
+              <div class="invite-form">
+                <input type="email" id="inviteEmail-${task.id}" placeholder="email@exemplo.com">
+                <button onclick="inviteCollaborator(${task.id})">Convidar</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Erro ao carregar tarefas:', error);
+      }
+    }
+
+    function getCurrentUserStage(taskId) {
+      // This would need to be fetched from the task data
+      return null;
+    }
+
+    async function updateProgress(taskId, stageId) {
+      try {
+        const response = await fetch(`${API_BASE}/progress/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ taskId, stageId }),
+        });
+
+        if (response.ok) {
+          loadTasks();
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar progresso:', error);
+      }
+    }
+
+    async function inviteCollaborator(taskId) {
+      const email = document.getElementById(`inviteEmail-${taskId}`).value;
+
+      if (!email) {
+        alert('Por favor, insira um email');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/tasks/${taskId}/invite`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('Convite enviado com sucesso! 🎉');
+          document.getElementById(`inviteEmail-${taskId}`).value = '';
+          loadTasks();
+        } else {
+          alert(data.error || 'Erro ao convidar');
+        }
+      } catch (error) {
+        alert('Erro ao conectar com o servidor');
+      }
+    }
+
+    function toggleStagesCollapse(btn) {
+      const stagesContainer = btn.parentElement;
+      btn.classList.toggle('collapsed');
+      
+      const buttons = stagesContainer.querySelectorAll('.stage-button');
+      buttons.forEach(b => {
+        if (btn.classList.contains('collapsed')) {
+          b.style.display = 'none';
+        } else {
+          b.style.display = 'inline-block';
+        }
+      });
+      
+      btn.textContent = btn.classList.contains('collapsed') ? 'Expandir' : 'Encolher';
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      token = null;
+      currentUser = null;
+      showAuthForm();
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
+
