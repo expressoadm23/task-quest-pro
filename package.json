@@ -18,20 +18,10 @@
   "description": "TaskQuest Pro - Gerenciador Gamificado Colaborativo",
   "dependencies": {
     "bcryptjs": "^3.0.2",
-    "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.10"
   },
-  "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/express": "^5.0.4",
-    "@types/node": "^24.9.1",
-    "@types/nodemailer": "^7.0.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
-  }
-}
+  
