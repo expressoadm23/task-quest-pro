@@ -9,6 +9,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// JWT Secret com valor padrão
+const JWT_SECRET = process.env.JWT_SECRET || 'taskquest-super-secret-key-2025';
+
+console.log('JWT_SECRET configurado:', JWT_SECRET ? 'Sim' : 'Não');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -26,13 +31,17 @@ const ADMIN_PASSWORD = 'admin123';
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', message: 'Servidor funcionando!' });
 });
 
 // Register
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+    }
     
     if (users.has(email)) {
       return res.status(400).json({ error: 'Usuário já existe' });
@@ -43,7 +52,8 @@ app.post('/api/auth/register', async (req, res) => {
     
     res.json({ message: 'Usuário criado com sucesso' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro no registro:', error);
+    res.status(500).json({ error: 'Erro ao criar conta: ' + error.message });
   }
 });
 
@@ -52,14 +62,22 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    let user;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+    }
     
+    let user;
+    let isAdmin = false;
+    
+    // Check if it's admin login
     if (email === ADMIN_EMAIL) {
       if (password !== ADMIN_PASSWORD) {
         return res.status(401).json({ error: 'Senha incorreta' });
       }
-      user = { email: ADMIN_EMAIL, isAdmin: true };
+      user = { email: ADMIN_EMAIL };
+      isAdmin = true;
     } else {
+      // Regular user login
       user = users.get(email);
       if (!user) {
         return res.status(401).json({ error: 'Usuário não encontrado' });
@@ -71,33 +89,42 @@ app.post('/api/auth/login', async (req, res) => {
       }
     }
     
-    const token = jwt.sign({ email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, email: user.email, isAdmin: user.isAdmin });
+    const token = jwt.sign(
+      { email: user.email, isAdmin },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({ token, email: user.email, isAdmin });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro no login:', error);
+    res.status(500).json({ error: 'Erro ao fazer login: ' + error.message });
   }
 });
 
 // Verify token middleware
 function verifyToken(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.split(' ')[1];
+  
   if (!token) {
     return res.status(401).json({ error: 'Token não fornecido' });
   }
   
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Token inválido' });
+    console.error('Erro ao verificar token:', error);
+    res.status(401).json({ error: 'Token inválido: ' + error.message });
   }
 }
 
 // Verify admin middleware
 function verifyAdmin(req, res, next) {
   if (!req.user.isAdmin) {
-    return res.status(403).json({ error: 'Acesso negado' });
+    return res.status(403).json({ error: 'Acesso negado. Apenas admin.' });
   }
   next();
 }
@@ -107,11 +134,15 @@ app.post('/api/tasks', verifyToken, (req, res) => {
   try {
     const { name, description, stages } = req.body;
     
+    if (!name) {
+      return res.status(400).json({ error: 'Nome da tarefa é obrigatório' });
+    }
+    
     const taskId = taskIdCounter++;
     const task = {
       id: taskId,
       name,
-      description,
+      description: description || '',
       stages: stages || [],
       currentStage: 0,
       creator: req.user.email,
@@ -133,7 +164,8 @@ app.post('/api/tasks', verifyToken, (req, res) => {
     
     res.json(task);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao criar tarefa:', error);
+    res.status(500).json({ error: 'Erro ao criar tarefa: ' + error.message });
   }
 });
 
@@ -143,7 +175,8 @@ app.get('/api/tasks', verifyToken, (req, res) => {
     const userTasks = Array.from(tasks.values());
     res.json(userTasks);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao buscar tarefas:', error);
+    res.status(500).json({ error: 'Erro ao buscar tarefas: ' + error.message });
   }
 });
 
@@ -156,7 +189,8 @@ app.get('/api/tasks/:id', verifyToken, (req, res) => {
     }
     res.json(task);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao buscar tarefa:', error);
+    res.status(500).json({ error: 'Erro ao buscar tarefa: ' + error.message });
   }
 });
 
@@ -191,7 +225,8 @@ app.put('/api/tasks/:id/stage', verifyToken, (req, res) => {
     
     res.json(task);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao atualizar etapa:', error);
+    res.status(500).json({ error: 'Erro ao atualizar etapa: ' + error.message });
   }
 });
 
@@ -222,7 +257,8 @@ app.delete('/api/tasks/:id', verifyToken, (req, res) => {
     
     res.json({ message: 'Tarefa deletada' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao deletar tarefa:', error);
+    res.status(500).json({ error: 'Erro ao deletar tarefa: ' + error.message });
   }
 });
 
@@ -232,7 +268,8 @@ app.get('/api/admin/activity-log', verifyToken, verifyAdmin, (req, res) => {
     const log = activityLog.slice(-100).reverse();
     res.json(log);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao buscar log:', error);
+    res.status(500).json({ error: 'Erro ao buscar log: ' + error.message });
   }
 });
 
@@ -253,7 +290,8 @@ app.get('/api/admin/tasks-overview', verifyToken, verifyAdmin, (req, res) => {
     
     res.json(overview);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao buscar overview:', error);
+    res.status(500).json({ error: 'Erro ao buscar overview: ' + error.message });
   }
 });
 
@@ -280,11 +318,12 @@ app.get('/api/admin/statistics', verifyToken, verifyAdmin, (req, res) => {
       recentActivities: activityLog.slice(-10).reverse(),
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao buscar estatísticas:', error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas: ' + error.message });
   }
 });
 
-// Fallback route
+// Fallback route - serve index.html
 app.use((req, res) => {
   res.sendFile(new URL('./public/index.html', import.meta.url).pathname);
 });
@@ -293,4 +332,5 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
   console.log(`👤 Admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+  console.log(`🔐 JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
 });
